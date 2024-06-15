@@ -1,0 +1,46 @@
+---
+title: "로또 당첨번호 크롤링 및 시각화"
+author: "Taein"
+format: html
+---
+
+## 패키지 로드 및 로또 당첨번호 크롤링 함수
+
+```{r}
+library(rvest)
+library(ggplot2)
+library(dplyr)
+
+get_lotto_numbers <- function(draw_number) {
+  url <- paste0("https://www.dhlottery.co.kr/gameResult.do?method=byWin&drwNo=", draw_number)
+  webpage <- read_html(url)
+  
+  numbers <- webpage %>%
+    html_nodes(".ball_645") %>%
+    html_text() %>%
+    as.numeric()
+  
+  return(numbers)
+}
+
+lotto_data <- data.frame()
+
+for (i in 1115:1119) { 
+  numbers <- get_lotto_numbers(i)
+  lotto_data <- rbind(lotto_data, data.frame(draw = i, number = numbers))
+  Sys.sleep(2)
+}
+
+lotto_data <- lotto_data %>%
+  group_by(number) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+ggplot(lotto_data, aes(x = factor(number), y = count)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "로또 당첨번호 빈도", x = "번호", y = "당첨 횟수") +
+  theme_minimal()
+
+```
+
+### 
